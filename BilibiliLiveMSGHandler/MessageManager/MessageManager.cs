@@ -84,7 +84,6 @@ namespace BilibiliLiveMSGHandler.MessageManager
                 {
                     //Console.WriteLine("DEFLATE");
                     byte[] dataBytes = receiveBytes[header.PackHeaderSize..].ToArray();
-
                     messageBytes = Decompress(dataBytes, CompressType.Deflate);
                     foreach (JsonElement messageElement in UnPack(messageBytes))
                     {
@@ -167,8 +166,8 @@ namespace BilibiliLiveMSGHandler.MessageManager
                         using MemoryStream messageStream = new();
                         dataStream.Write(dataBytes, 0, dataBytes.Length);
                         dataStream.Position = 0;
-                        using DeflateStream brotliStream = new(dataStream, CompressionMode.Decompress);
-                        brotliStream.CopyTo(messageStream);
+                        using DeflateStream deflateStream = new(dataStream, CompressionMode.Decompress);
+                        deflateStream.CopyTo(messageStream);
                         messageStream.Position = 0;
                         return messageStream.ToArray();
                     }
