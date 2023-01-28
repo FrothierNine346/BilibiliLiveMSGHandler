@@ -39,7 +39,7 @@ namespace BilibiliLiveMSGHandler.ServerApi
         [JsonPropertyName("roomid")]
         public int Roomid { get; set; } = 3;
         [JsonPropertyName("protover")]
-        public int Protover { get; set; } = (int)ProtoVer.NORMAL;
+        public int Protover { get; set; } = (int)ProtoVer.BROTLI;
         [JsonPropertyName("platform")]
         public string Platform { get; set; } = "web";
         [JsonPropertyName("type")]
