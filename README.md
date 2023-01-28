@@ -1,0 +1,2 @@
+# BilibiliLiveMSGHandler
+连接哔哩哔哩直播间消息WebSocket服务器并为所有消息使用自定义处理器
