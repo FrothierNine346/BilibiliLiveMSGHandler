@@ -68,7 +68,7 @@ namespace BilibiliLiveMSGHandler.MessageManager
             Header header = new(receiveBytes[..HeaderLength]);
             byte[] messageBytes;
 
-            if (header.PackHeaderOperation == (int)Operation.SEND_MSG_REPLY || header.PackHeaderOperation == (int)Operation.AUTH_REPLY)
+            if (header.PackHeaderOperation == (int)Operation.SEND_MSG_REPLY || header.PackHeaderOperation == (int)Operation.AUTH_REPLY || header.PackHeaderOperation == (int)Operation.HEARTBEAT_REPLY)
             {
                 if (header.PackHeaderVer == (short)ProtoVer.BROTLI)
                 {
@@ -80,16 +80,16 @@ namespace BilibiliLiveMSGHandler.MessageManager
                         yield return messageElement;
                     }
                 }
-                else if (header.PackHeaderVer == (short)ProtoVer.DEFLATE)
-                {
-                    //Console.WriteLine("DEFLATE");
-                    byte[] dataBytes = receiveBytes[header.PackHeaderSize..].ToArray();
-                    messageBytes = Decompress(dataBytes, CompressType.Deflate);
-                    foreach (JsonElement messageElement in UnPack(messageBytes))
-                    {
-                        yield return messageElement;
-                    }
-                }
+                //else if (header.PackHeaderVer == (short)ProtoVer.DEFLATE)
+                //{
+                //    //Console.WriteLine("DEFLATE");
+                //    byte[] dataBytes = receiveBytes[header.PackHeaderSize..].ToArray();
+                //    messageBytes = Decompress(dataBytes, CompressType.Deflate);
+                //    foreach (JsonElement messageElement in UnPack(messageBytes))
+                //    {
+                //        yield return messageElement;
+                //    }
+                //}
                 else if (header.PackHeaderVer == (short)ProtoVer.NORMAL)
                 {
                     //Console.WriteLine("NORMAL");
@@ -116,9 +116,8 @@ namespace BilibiliLiveMSGHandler.MessageManager
                 }
                 else if (header.PackHeaderVer == (short)ProtoVer.HEARTBEAT)
                 {
-                    if (header.PackHeaderOperation == (short)Operation.AUTH_REPLY) // TODO:服务器心跳回应被忽略，包含人气值
+                    if (header.PackHeaderOperation == (short)Operation.AUTH_REPLY)
                     {
-                        //Console.WriteLine("HEARTBEAT");
                         byte[] dataBytes = receiveBytes[header.PackHeaderSize..].ToArray();
                         messageBytes = (byte[])dataBytes.Clone();
                         while (messageBytes.Length > 0)
@@ -129,6 +128,13 @@ namespace BilibiliLiveMSGHandler.MessageManager
 
                             messageBytes = messageBytes[tempBytes.Length..];
                         };
+                    }
+                    else if (header.PackHeaderOperation == (short)Operation.HEARTBEAT_REPLY)
+                    {
+                        byte[] dataBytes = receiveBytes[header.PackHeaderSize..(header.PackHeaderSize+4)].ToArray();
+                        messageBytes = (byte[])dataBytes.Clone();
+                        using JsonDocument tempDocument = JsonDocument.Parse($"{{\"cmd\":\"_HEARTBEAT\",\"data\":{{\"popularity\":{BitConverter.ToInt32(messageBytes.Reverse().ToArray())}}}}}");
+                        yield return tempDocument.RootElement.Clone();
                     }
                 }
                 else
@@ -147,30 +153,30 @@ namespace BilibiliLiveMSGHandler.MessageManager
 
         public static byte[] Decompress(byte[] dataBytes, CompressType compressType)
         {
-            switch (compressType)
+            switch (compressType)   // TODO:压缩类型对应不正确，暂只保留Brotli。（理论上也不会返回其他的）
             {
-                case CompressType.Gzip:
-                    {
-                        using MemoryStream dataStream = new();
-                        using MemoryStream messageStream = new();
-                        dataStream.Write(dataBytes, 0, dataBytes.Length);
-                        dataStream.Position = 0;
-                        using GZipStream gZipStream = new(dataStream, CompressionMode.Decompress);
-                        gZipStream.CopyTo(messageStream);
-                        messageStream.Position = 0;
-                        return messageStream.ToArray();
-                    }
-                case CompressType.Deflate:
-                    {
-                        using MemoryStream dataStream = new();
-                        using MemoryStream messageStream = new();
-                        dataStream.Write(dataBytes, 0, dataBytes.Length);
-                        dataStream.Position = 0;
-                        using DeflateStream deflateStream = new(dataStream, CompressionMode.Decompress);
-                        deflateStream.CopyTo(messageStream);
-                        messageStream.Position = 0;
-                        return messageStream.ToArray();
-                    }
+                //case CompressType.Gzip:
+                //    {
+                //        using MemoryStream dataStream = new();
+                //        using MemoryStream messageStream = new();
+                //        dataStream.Write(dataBytes, 0, dataBytes.Length);
+                //        dataStream.Position = 0;
+                //        using GZipStream gZipStream = new(dataStream, CompressionMode.Decompress);
+                //        gZipStream.CopyTo(messageStream);
+                //        messageStream.Position = 0;
+                //        return messageStream.ToArray();
+                //    }
+                //case CompressType.Deflate:
+                //    {
+                //        using MemoryStream dataStream = new();
+                //        using MemoryStream messageStream = new();
+                //        dataStream.Write(dataBytes, 0, dataBytes.Length);
+                //        dataStream.Position = 0;
+                //        using DeflateStream deflateStream = new(dataStream, CompressionMode.Decompress);
+                //        deflateStream.CopyTo(messageStream);
+                //        messageStream.Position = 0;
+                //        return messageStream.ToArray();
+                //    }
                 case CompressType.Brotli:
                     {
                         using MemoryStream dataStream = new();

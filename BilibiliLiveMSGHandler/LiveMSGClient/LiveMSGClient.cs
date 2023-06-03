@@ -50,7 +50,7 @@ namespace BilibiliLiveMSGHandler.LiveMSGClient
             client.Options.SetRequestHeader("Cache-Control", "no-cache");
             client.Options.SetRequestHeader("Host", $"{chatServer.Host}:{chatServer.Port}");
             client.Options.SetRequestHeader("Origin", "https://live.bilibili.com");
-            client.Options.SetRequestHeader("Origin", "https://live.bilibili.com");
+            //client.Options.SetRequestHeader("Origin", "https://live.bilibili.com");
             client.Options.SetRequestHeader("Pragma", "no-cache");
             client.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61");
         }
