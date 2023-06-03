@@ -9,3 +9,7 @@
 ---
 
 项目未使用任何第三方库。
+
+---
+
+感谢开源项目：[blivedm](https://github.com/xfgryujk/blivedm)
